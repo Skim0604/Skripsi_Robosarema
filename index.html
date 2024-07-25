@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;  /* Warna latar belakang */
+        }
+        #container {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;  /* Warna latar belakang kontainer */
+            border-radius: 10px;  /* Membuat sudut kontainer melengkung */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);  /* Menambahkan bayangan pada kontainer */
+            padding: 20px;  /* Menambahkan ruang di dalam kontainer */
+        }
+        #video-container {
+            flex: 2;
+        }
+        #controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 20px;
+        }
+        .control-btn {
+            padding: 10px 20px;
+            font-size: 24px;  /* Ukuran font lebih besar untuk panah */
+            margin: 5px;
+            cursor: pointer;
+            background-color: #007bff;  /* Warna latar belakang tombol */
+            color: white;  /* Warna teks tombol */
+            border: none;
+            border-radius: 5px;  /* Membuat sudut tombol melengkung */
+            transition: background-color 0.3s;  /* Menambahkan efek transisi saat tombol diklik */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-btn:hover {
+            background-color: #0056b3;  /* Warna latar belakang tombol saat di-hover */
+        }
+        #joystick {
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 10px;
+            justify-items: center;
+            align-items: center;
+        }
+        #up-btn { grid-area: up; }
+        #left-btn { grid-area: left; }
+        #right-btn { grid-area: right; }
+        #down-btn { grid-area: down; }
+        #error-message {
+            display: none;
+            text-align: center;
+            color: red;
+            font-size: 24px;
+        }
+        h1 {
+            color: #333;  /* Warna teks judul */
+        }
+    </style>
+</head>
+<body>
+    <div id="error-message">This website can only be accessed from a laptop or large screen device.</div>
+    <div id="container">
+        <div id="video-container">
+            <h1>ROBOSAREMA</h1>
+            <img id="video-feed" src="{{ url_for('video_feed') }}" width="640" height="480">
+        </div>
+        <div id="controls">
+            <button class="control-btn" id="pick-btn">PICK</button>
+            <button class="control-btn" id="drop-btn">DROP</button>
+            <button class="control-btn" id="start-btn">START</button> <!-- Tombol ini akan berfungsi sebagai Start/Stop -->
+            <div id="joystick">
+                <button class="control-btn" id="up-btn">&#9650;</button> <!-- Panah atas -->
+                <button class="control-btn" id="left-btn">&#9664;</button> <!-- Panah kiri -->
+                <button class="control-btn" id="right-btn">&#9654;</button> <!-- Panah kanan -->
+                <button class="control-btn" id="down-btn">&#9660;</button> <!-- Panah bawah -->
+            </div>
+        </div>
+    </div>
+    <script>
+        let isPaused = true;  // Mengatur status tombol awal sebagai Start
+
+        function sendRequest(route) {
+            fetch(route, {method: 'GET'})
+                .then(response => console.log(response.status))
+                .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('pick-btn').addEventListener('click', function() {
+            sendRequest('/pick');
+        });
+
+        document.getElementById('drop-btn').addEventListener('click', function() {
+            sendRequest('/drop');
+        });
+
+        document.getElementById('start-btn').addEventListener('click', function() {
+            if (isPaused) {
+                sendRequest('/start');
+                document.getElementById('start-btn').textContent = 'STOP';
+            } else {
+                sendRequest('/stop');
+                document.getElementById('start-btn').textContent = 'START';
+            }
+            isPaused = !isPaused;  // Toggle status
+        });
+
+        document.getElementById('up-btn').addEventListener('click', function() {
+            sendRequest('/forward');
+        });
+
+        document.getElementById('left-btn').addEventListener('click', function() {
+            sendRequest('/left');
+        });
+
+        document.getElementById('right-btn').addEventListener('click', function() {
+            sendRequest('/right');
+        });
+
+        document.getElementById('down-btn').addEventListener('click', function() {
+            sendRequest('/backward');
+        });
+
+        document.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'ArrowUp':
+                    sendRequest('/forward');
+                    break;
+                case 'ArrowLeft':
+                    sendRequest('/left');
+                    break;
+                case 'ArrowRight':
+                    sendRequest('/right');
+                    break;
+                case 'ArrowDown':
+                    sendRequest('/backward');
+                    break;
+                default:
+                    break;
+            }
+        });
+
+      //  function refreshVideoFeed() {
+      //      const videoFeed = document.getElementById('video-feed');
+      //     videoFeed.src = "{{ url_for('video_feed') }}" + "?t=" + new Date().getTime();
+      //  }
+
+      //  setInterval(refreshVideoFeed, 1000);  // Refresh setiap detik
+
+        function checkScreenSize() {
+            if (window.innerWidth < 1024) {
+                document.getElementById('container').style.display = 'none';
+                document.getElementById('error-message').style.display = 'block';
+            } else {
+                document.getElementById('container').style.display = 'flex';
+                document.getElementById('error-message').style.display = 'none';
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        window.addEventListener('load', checkScreenSize);
+    </script>
+</body>
+</html>
